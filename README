@@ -1,0 +1,38 @@
+ahxm-glue - Glues a set of .wav files together
+ttcdt <dev@triptico.com>
+This software is released into the public domain.
+
+Usage: ahxm-glue {wave file} [options] [{wave file} [options]...]
+
+Options:
+
+output={wave file}  Output wave file (default: output.wav).
+offset={time}       Offset from previous file (default: 0).
+                    positive: insert silence.
+                    negative: overlap into previous file.
+                    0: start immediately.
+skip={time}         Time to skip from file (default: 0).
+end={time}          End time (default: 0).
+                    positive: absolute length.
+                    negative: substract time from wave length.
+                    0: full length.
+fade_out={time}     Fade out time (default: 0).
+
+Time is specified as minutes.seconds: 1.00, 2.23, 0.1535 (15.35 secs.)
+
+All options except output= affect only to the previous file.
+
+Examples:
+
+$ ahxm-glue 1.wav 2.wav 3.wav
+  Generates output.wav with the concatenation of the three files
+$ ahxm-glue 1.wav 2.wav offset=-0.02 3.wav
+  2.wav mixes 2 seconds into the end of 1.wav
+$ ahxm-glue 1.wav skip=1.30 2.wav offset=0.02 3.wav
+  Skip 1:30 mins from 1st and insert 2 silence seconds before 2nd
+$ ahxm-glue 1.wav 2.wav end=0.30 3.wav
+  2.wav only lasts 30 seconds
+$ ahxm-glue 1.wav fade_out=0.02 2.wav offset=-0.02 3.wav
+  1.wav starts fading out when 2.wav starts
+$ ahxm-glue 1.wav 2.wav 3.wav end=-0.1025 output=out.wav
+  3.wav lasts 10.25 seconds less and result stored in out.wav

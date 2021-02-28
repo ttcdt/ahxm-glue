@@ -36,3 +36,5 @@ $ ahxm-glue 1.wav fade_out=0.02 2.wav offset=-0.02 3.wav
   1.wav starts fading out when 2.wav starts
 $ ahxm-glue 1.wav 2.wav 3.wav end=-0.1025 output=out.wav
   3.wav lasts 10.25 seconds less and result stored in out.wav
+
+If the FLAC library is detected, .flac files can be used as input.

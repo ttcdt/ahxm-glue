@@ -10,7 +10,7 @@
 
 */
 
-#define VERSION "1.01"
+#define VERSION "1.02"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +32,11 @@ struct wave *waves = NULL;
 
 char output_file[1024] = "output.wav";
 
+extern int is_flac_supported(void);
+extern FILE *flac_convert(char *fn);
+
+
+/** code **/
 
 off_t time_to_offset(double time)
 /* converts a time in min.sec to samples */
@@ -85,18 +90,12 @@ static int fget32(FILE *f)
 }
 
 
-int open_wav_file(char *fn, size_t *size, FILE **fp)
+int load_wav_file(size_t *size, FILE **fp)
 /* a very simple .wav file loader */
 {
-    FILE *f = NULL;
+    FILE *f;
     char buf[1024];
     int sr, ret = 0;
-
-    if ((*fp = fopen(fn, "rb")) == NULL) {
-        ret = 10;
-        printf("ERROR: cannot open '%s'\n", fn);
-        goto done;
-    }
 
     f = *fp;
 
@@ -176,8 +175,28 @@ int add_wave(char *fn, off_t *pos, double offset_time,
     int ret = 0;
     FILE *f;
     size_t size;
+    char *ext;
 
-    if (open_wav_file(fn, &size, &f) == 0) {
+    /* is it a .flac file? */
+    if ((ext = strrchr(fn, '.')) && strcmp(ext, ".flac") == 0) {
+        if (!is_flac_supported()) {
+            ret = 17;
+            printf("ERROR: this binary does not support FLAC files\n");
+            goto done;
+        }
+        else
+            f = flac_convert(fn);
+    }
+    else
+        f = fopen(fn, "rb");
+
+    if (f == NULL) {
+        ret = 10;
+        printf("ERROR: cannot open '%s'\n", fn);
+        goto done;
+    }
+
+    if (load_wav_file(&size, &f) == 0) {
         struct wave *w;
         off_t offset;
         off_t skip;
@@ -221,6 +240,7 @@ int add_wave(char *fn, off_t *pos, double offset_time,
         printf("INFO : '%s' %.2f\n", fn, offset_to_time(w->start));
     }
 
+done:
     return ret;
 }
 
@@ -387,8 +407,11 @@ int usage(void)
     printf("fade_out={time}     Fade out time (default: 0).\n");
     printf("\n");
     printf("Time is specified as minutes.seconds: 1.00, 2.23, 0.1535 (15.35 secs.)\n\n");
-    printf("All options except output= affect only to the previous file.\n");
-    printf("\n");
+    printf("All options except output= affect only to the previous file.\n\n");
+
+    if (is_flac_supported())
+        printf("This binary also accepts input files in FLAC format.\n\n");
+
     printf("Examples:\n\n");
     printf("$ ahxm-glue 1.wav 2.wav 3.wav\n");
     printf("  Generates output.wav with the concatenation of the three files\n");

@@ -142,8 +142,6 @@ FILE *flac_convert(const char *ifile)
 
             FLAC__stream_decoder_delete(decoder);
 
-            ret = 1;
-
             /* rewind the tmpfile */
             rewind(o);
         }

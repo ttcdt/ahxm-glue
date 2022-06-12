@@ -10,7 +10,7 @@
 
 */
 
-#define VERSION "1.03"
+#define VERSION "1.04"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -148,13 +148,25 @@ int load_wav_file(size_t *size, FILE **fp)
     }
 
     fget16(f);
-    fread(buf, 1, 4, f);
-    buf[4] = 0;
 
-    if (strcmp(buf, "data") != 0) {
-        ret = 16;
-        printf("ERROR: unrecognized data chunk\n");
-        goto done;
+    /* locate the "data" chunk */
+    for (;;) {
+        int o;
+
+        if (!fread(buf, 4, 1, f)) {
+            ret = 16;
+            printf("ERROR: premature EOF\n");
+            goto done;
+        }
+
+        buf[4] = 0;
+
+        if (strcmp(buf, "data") == 0)
+            break;
+
+        /* skip uninteresting chunk */
+        o = fget32(f);
+        fseek(f, o, SEEK_CUR);
     }
 
     *size = fget32(f) / 4;
